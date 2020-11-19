@@ -5,6 +5,12 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 db = SQLAlchemy(app)
 
+def row2dict(row):
+    d = {}
+    for column in row.__table__.columns:
+        d[column.name] = str(getattr(row, column.name))
+
+    return d
 
 
 class Question(db.Model):
@@ -15,7 +21,10 @@ class Question(db.Model):
 @app.route('/', methods=['GET'])
 def index():
     questions = Question.query.order_by(Question.votes).all()
-    return jsonify(questions)
+    questions_as_dict = []
+    for q in questions:
+        questions_as_dict.append(row2dict(q))
+    return jsonify(questions_as_dict)
 
 @app.route('/new', methods=['POST'])
 def create():
